@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: video-downloader
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app --workers 2 --threads 4 --timeout 120 -b 0.0.0.0:$PORT
+    autoDeploy: true
+    disk:
+      name: downloads
+      mountPath: /app/downloads
+      sizeGB: 1

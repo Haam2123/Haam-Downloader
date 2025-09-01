@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.env
+venv/
+.venv/
+
+# OS
+.DS_Store
+
+# Downloads (runtime)
+downloads/
+
+# Node/tailwind caches (if any in future)
+node_modules/

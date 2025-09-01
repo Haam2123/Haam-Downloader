@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Downloader</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="bg-white shadow-2xl rounded-2xl p-8 w-full max-w-lg">
+    <h1 class="text-2xl font-bold mb-6 text-center">🎬 Video Downloader</h1>
+
+    <div class="mb-4">
+      <label for="url" class="block text-sm font-medium text-gray-700">Video URL</label>
+      <input type="text" id="url" class="mt-1 w-full p-2 border rounded-lg focus:ring focus:ring-blue-300" placeholder="Paste video link here...">
+    </div>
+
+    <button onclick="startDownload()" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition">
+      Download
+    </button>
+
+    <div id="statusBox" class="mt-6 hidden">
+      <p id="statusText" class="text-gray-700">Starting download...</p>
+      <div class="w-full bg-gray-200 rounded-full h-4 mt-2">
+        <div id="progressBar" class="bg-blue-600 h-4 rounded-full w-0"></div>
+      </div>
+    </div>
+
+    <div id="downloadLink" class="mt-6 hidden text-center">
+      <a id="fileUrl" href="#" class="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition">⬇️ Download File</a>
+    </div>
+  </div>
+
+  <script>
+    let currentTaskId = null;
+
+    async function startDownload() {
+      const url = document.getElementById("url").value.trim();
+      if (!url) {
+        alert("Please enter a video URL!");
+        return;
+      }
+
+      const startBtn = event.target;
+      startBtn.disabled = true;
+
+      try {
+        const res = await fetch("/download", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({url})
+        });
+
+        const data = await res.json();
+        if (res.ok && data.task_id) {
+          currentTaskId = data.task_id;
+          document.getElementById("statusBox").classList.remove("hidden");
+          pollStatus();
+        } else {
+          alert(data.error || "Failed to start download");
+          startBtn.disabled = false;
+        }
+      } catch (e) {
+        alert("Network error: " + e.message);
+        startBtn.disabled = false;
+      }
+    }
+
+    async function pollStatus() {
+      if (!currentTaskId) return;
+
+      const res = await fetch(`/status/${currentTaskId}`);
+      const task = await res.json();
+
+      document.getElementById("statusText").innerText = `Status: ${task.status}`;
+
+      if (task.progress) {
+        let progressNum = parseFloat(task.progress.replace("%", "")) || 0;
+        document.getElementById("progressBar").style.width = progressNum + "%";
+      }
+
+      if (task.status === "finished") {
+        document.getElementById("downloadLink").classList.remove("hidden");
+        document.getElementById("fileUrl").href = `/file/${currentTaskId}`;
+      } else if (task.status === "error") {
+        alert("Error: " + task.error);
+        currentTaskId = null;
+      } else {
+        setTimeout(pollStatus, 2000);
+      }
+    }
+  </script>
+</body>
+</html>
