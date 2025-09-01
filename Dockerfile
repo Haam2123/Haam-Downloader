@@ -2,13 +2,13 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# System dependencies
+# Install system dependencies
 RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
 
-# Copy project
+# Copy project files
 COPY . .
 
-# Python deps
+# Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Render/Heroku provide $PORT; default to 5000 locally
@@ -16,4 +16,5 @@ ENV PORT=5000
 
 EXPOSE 5000
 
-CMD ["python", "app.py"]
+# Run the app with Gunicorn (production-ready)
+CMD ["gunicorn", "-b", "0.0.0.0:${PORT}", "app:app"]
