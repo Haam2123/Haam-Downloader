@@ -17,4 +17,4 @@ ENV PORT=5000
 EXPOSE 5000
 
 # Run the app with Gunicorn (production-ready)
-CMD ["gunicorn", "-b", "0.0.0.0:${PORT}", "app:app"]
+CMD gunicorn -b 0.0.0.0:$PORT app:app
